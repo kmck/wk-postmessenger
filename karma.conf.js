@@ -23,6 +23,9 @@ module.exports = (config) => {
         nodeResolve({ jsnext: true }),
         istanbul({
           include: 'src/WKPostMessenger.js',
+          instrumenterConfig: {
+            embedSource: true,
+          },
         }),
       ],
       // will help to prevent conflicts between different tests entries
@@ -33,13 +36,13 @@ module.exports = (config) => {
     coverageReporter: {
       dir: 'coverage',
       reporters: [{
-      //   type: 'lcov',
-      //   subdir: '.',
-      // }, {
-      //   type: 'json',
-      //   subdir: '.',
-      //   file: 'coverage-final.json',
-      // }, {
+        type: 'lcov',
+        subdir: '.',
+      }, {
+        type: 'json',
+        subdir: '.',
+        file: 'coverage-final.json',
+      }, {
         type: 'text',
       }],
     },

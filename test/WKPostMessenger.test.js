@@ -3,7 +3,7 @@ import WKPostMessenger from '../src/WKPostMessenger';
 const mockPostMessageTarget = (
   handshakeTimeout = 0,
   messageTimeout = handshakeTimeout,
-  wkParentCallback = () => {}
+  wkParentCallback = () => {},
 ) => ({
   postMessage(payload) {
     const { id, callback, action, data } = payload;
@@ -180,6 +180,23 @@ describe('WKPostMessenger', () => {
         });
     });
 
+    it('combines redundant handshake requests', () => {
+      prepareEnv({ wkPostMessage: mockPostMessageTarget(1) });
+      const postMessenger = new WKPostMessenger({ autoHandshake: false, handshakeTimeout: 100 });
+      const promise = postMessenger.sendHandshake();
+      let redundantPromise;
+      assert.doesNotThrow(() => {
+        redundantPromise = postMessenger.sendHandshake();
+      }, '[WKPostMessenger] redundant sendHandshake threw an error!!');
+      assert.strictEqual(promise, redundantPromise);
+      return promise
+        .then(destroyEnv)
+        .catch(() => {
+          destroyEnv();
+          assert.fail('Handshake was not acknowledged');
+        });
+    });
+
     it('throws an error if trying to send the handshake after already being connected', () => {
       prepareEnv();
       const postMessenger = new WKPostMessenger({ autoHandshake: false });
@@ -274,7 +291,7 @@ describe('WKPostMessenger', () => {
       const postMessenger = new WKPostMessenger({ handshakeTimeout: 1, messageTimeout: 1 });
       const action = 'testPromiseResolve';
       const data = { tyrion: 'lannister' };
-      const promise = postMessenger.sendMessage(action, data);
+      const promise = postMessenger.sendMessage(action, data, 0);
       assert.isTrue(promise instanceof Promise);
       promise
         .then(() => {
@@ -382,7 +399,7 @@ describe('WKPostMessenger', () => {
       });
     });
 
-    it('can return Promises', () =>
+    it('can return Promises', () => (
      new Promise((resolve, reject) => {
        const timeout = setTimeout(reject, 20);
        const wkParentCallback = sinon.spy((payload) => {
@@ -413,7 +430,7 @@ describe('WKPostMessenger', () => {
             },
           });
         })
-    );
+    ));
 
     it('still invokes callback without handleMessage', () => {
       const wkParentCallback = sinon.spy(() => {});
